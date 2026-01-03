@@ -1,0 +1,17 @@
+﻿treatment,replicate,sample_name
+m_c,0,mR_c_1
+m_c,1,mR_c_2
+wt_c,0,wtR_c_1
+wt_c,1,wtR_c_2
+m_h,0,mR_h_1
+m_h,1,mR_h_2
+wt_h,0,wtR_h_1
+wt_h,1,wtR_h_2
+WT,0,WT_1
+WT,1,WT_2
+m,0,m_1
+m,1,m_2
+t,0,t_1
+t,1,t_2
+mt,0,mt_1
+mt,1,mt_2

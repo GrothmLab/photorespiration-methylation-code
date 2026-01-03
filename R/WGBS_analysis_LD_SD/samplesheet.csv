@@ -1,0 +1,9 @@
+sample;fastq;name;genotype;treatment;replicate
+6WT_LD_1;Xa167L2_index_14.fastq;6WT_LD_1;6WT;LD;1
+6WT_LD_2;Xa167L2_index_5.fastq;6WT_LD_2;6WT;LD;2
+6WT_SD_1;Xa167L2_index_9.fastq;6WT_SD_1;6WT;SD;1
+6WT_SD_2;Xa167L2_index_19.fastq;6WT_SD_2;6WT;SD;2
+F41_LD_1;Xa167L2_index_3.fastq;F41_LD_1;F41;LD;1
+F41_LD_2;Xa167L2_index_4.fastq;F41_LD_2;F41;LD;2
+F41_SD_1;Xa167L1_index_1.fastq;F41_SD_1;F41;SD;1
+F41_SD_2;Xa167L2_index_18.fastq;F41_SD_2;F41;SD;2

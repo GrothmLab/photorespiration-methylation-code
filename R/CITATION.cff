@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+title: R scripts for special BS-seq visualizations
+message: If you use these scripts, please cite this record and the associated manuscript.
+authors:
+  - family-names: Groth
+    given-names: Martin
+    orcid: https://orcid.org/0000-0003-0547-5032
+version: 1.0.0
+date-released: 2026-01-03
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18137716
+preferred-citation:
+  type: article
+  title: "Photorespiration is linked to DNA methylation by formate as a one-carbon source"
+  authors:
+    - family-names: Hankofer
+      given-names: Valentin
+    - family-names: Ghirardo
+      given-names: Andrea
+    - family-names: Obermaier
+      given-names: Lisa
+    - family-names: Poschet
+      given-names: Gernot
+    - family-names: Kumar
+      given-names: Jisha Suresh
+    - family-names: Gross
+      given-names: Inonge
+    - family-names: Durner
+      given-names: Jörg
+    - family-names: Rychlik
+      given-names: Michael
+    - family-names: Wirtz
+      given-names: Markus
+    - family-names: Hell
+      given-names: Rüdiger
+    - family-names: Schnitzler
+      given-names: Jörg-Peter
+    - family-names: Groth
+      given-names: Martin
+  journal: "In press"
+  year: 2026
+  doi: 10.1038/XXXXXXX             # replace with article DOI

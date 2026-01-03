@@ -1,0 +1,7 @@
+# Data 
+data_dir: /path/to/data/dir
+# Sample info
+samples: /path/to/samplesheet.csv
+# Genome
+genome: TAIR10
+genome_folder: /path/to/Arabidopsis_thaliana/Ensembl/TAIR10/Sequence/Bowtie2Index/

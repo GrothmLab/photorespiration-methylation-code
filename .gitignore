@@ -1,0 +1,25 @@
+# --- Local Zenodo cache (not versioned) ---
+Zenodo_archive/
+
+# --- Analysis inputs/outputs ---
+# Ignore all files inside source-data/ and out/ in any R analysis folder.
+# (A symlink named 'source-data' can still be tracked; this only ignores its contents.)
+R/**/source-data/**
+R/**/out/**
+
+# --- R / RStudio ---
+.Rhistory
+.RData
+.Rproj.user/
+.Rproj
+.Renv
+.Rprofile
+
+# --- OS/editor cruft ---
+.DS_Store
+__MACOSX/
+Thumbs.db
+
+# --- Logs / temp ---
+*.log
+*.tmp

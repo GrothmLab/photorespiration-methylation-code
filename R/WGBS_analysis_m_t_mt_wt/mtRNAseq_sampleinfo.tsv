@@ -1,0 +1,13 @@
+condition	replicate	genotype	treatment	sample_name
+m_LD	0	m	LD	m_2_LD
+m_LD	1	m	LD	m_3_LD
+m_LD	2	m	LD	m_4_LD
+mt_LD	0	mt	LD	mt_2_LD
+mt_LD	1	mt	LD	mt_3_LD
+mt_LD	2	mt	LD	mt_4_LD
+t_LD	0	t	LD	t_2_LD
+t_LD	1	t	LD	t_3_LD
+t_LD	2	t	LD	t_4_LD
+wt_LD	0	wt	LD	wt_2_LD
+wt_LD	1	wt	LD	wt_3_LD
+wt_LD	2	wt	LD	wt_4_LD

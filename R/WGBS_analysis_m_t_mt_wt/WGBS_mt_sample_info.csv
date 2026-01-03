@@ -1,0 +1,9 @@
+﻿genotype,replicate,sample_name
+m,0,m_1
+m,1,m_2
+mt,0,mt_1
+mt,1,mt_2
+t,0,t_1
+t,1,t_2
+wt,0,WT_1
+wt,1,WT_2

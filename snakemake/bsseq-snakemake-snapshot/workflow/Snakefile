@@ -1,0 +1,238 @@
+import pandas as pd
+
+configfile: "config/config.yaml"
+
+SAMPLE_DF = (
+    pd.read_csv(config["samples"], dtype={"sample": str}).set_index("sample", drop=False)
+)
+
+samples = SAMPLE_DF["sample"].tolist()
+
+genome_folder = config['genome_folder']
+
+rule all:
+    input:
+        expand("wigs/{s}_pe.deduplicated.nonCG_filtered_{context}.wig", s=samples, context = ["CG","CHG","CHH"]),
+        expand("methcall_out/{s}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt.gz.tbi", s=samples),
+        expand("methylkit_in/{s}.{context}_report_sorted.txt", s=samples, context = ["CG","CHG","CHH"]),
+        "multiqc/multiqc_report.html"
+
+def get_reads(wildcards):
+    read1 = SAMPLE_DF.loc[wildcards.sample,"fastq_1"]
+    read2 = SAMPLE_DF.loc[wildcards.sample,"fastq_2"]
+    data_dir = config['data_dir']
+    return [f'{data_dir}/{read1}', f'{data_dir}/{read2}']
+
+#def get_high_mem_mb(wildcards, attempt):
+#    return attempt*6000 + 12000
+
+def get_medium_mem_mb(wildcards, attempt):
+    return attempt*4000 + 4000
+
+def get_low_mem_mb(wildcards, attempt):
+    return attempt*1000
+
+rule trimmomatic_PE:
+    input:
+        get_reads
+    output:
+        p1="trimmed_fqs/{sample}_trimmed_p_1.fq.gz",
+        u1="trimmed_fqs/{sample}_trimmed_u_1.fq.gz",
+        p2="trimmed_fqs/{sample}_trimmed_p_2.fq.gz",
+        u2="trimmed_fqs/{sample}_trimmed_u_2.fq.gz",
+        r="reports/{sample}_trimmomatic_summary.txt",
+        l="logs/trimmomatic/{sample}_trim_out.log"
+    params:
+        "ILLUMINACLIP:/path/to/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa:1:30:12:3:true",
+        "CROP:150",
+        "HEADCROP:3",
+        "LEADING:3",
+        "TRAILING:3",
+        "SLIDINGWINDOW:4:15",
+        "MINLEN:20"
+    resources:
+        mem_mb = get_low_mem_mb
+    threads: 6
+    shell:
+        "trimmomatic PE -threads {threads} -phred33 -summary {output.r} -trimlog {output.l} {input} {output.p1} {output.u1} {output.p2} {output.u2} {params}"
+      
+rule fastq_check:
+    input:
+        "trimmed_fqs/{sample}_trimmed_p_1.fq.gz",
+        "trimmed_fqs/{sample}_trimmed_p_2.fq.gz"
+    output:
+        "fastqc/{sample}_trimmed_p_1_fastqc.zip",
+        "fastqc/{sample}_trimmed_p_2_fastqc.zip",
+        "fastqc/{sample}_trimmed_p_1_fastqc.html",
+        "fastqc/{sample}_trimmed_p_2_fastqc.html"
+    log:
+        "logs/fastqc/{sample}.log"
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "fastqc {input} -o fastqc | tee {log}"
+
+rule bmark_map:
+    input:
+        r1="trimmed_fqs/{sample}_trimmed_p_1.fq.gz",
+        r2="trimmed_fqs/{sample}_trimmed_p_2.fq.gz"
+    output:
+        "bismark_out/{sample}_pe.bam",
+        "bismark_out/{sample}_PE_report.txt",
+        "bismark_out/{sample}_pe.nucleotide_stats.txt"
+    params:
+        standard="--bowtie2 -N 1 --parallel 1 --dovetail --maxins 700 --nucleotide_coverage --samtools_path /path/to/bin",
+        score="L,0,-0.2",
+        gf=genome_folder,
+        out="bismark_out"
+    resources:
+        mem_mb = get_medium_mem_mb
+    threads: 3
+    log:
+        "logs/bismark/map/{sample}.log"
+    shell:
+        "bismark {params.standard} --genome_folder {params.gf} --score_min {params.score} -o {params.out} --basename {wildcards.sample} -1 {input.r1} -2 {input.r2} | tee {log}"
+
+rule bismark_deduplicate:
+    input:
+        "bismark_out/{sample}_pe.bam"
+    output:
+        temp("bismark_out/{sample}_pe.deduplicated.bam"),
+        "bismark_out/{sample}_pe.deduplication_report.txt"
+    log:
+        "logs/bismark/deduplicate/{sample}.log"
+    resources:
+        mem_mb = get_medium_mem_mb
+    shell:
+        "deduplicate_bismark -p --output_dir bismark_out --bam {input} | tee {log}"
+
+rule bismark_Steve_filer:
+    input:
+        "bismark_out/{sample}_pe.deduplicated.bam"
+    output:
+        temp("bismark_out/{sample}_pe.deduplicated.nonCG_filtered.bam")
+    log:
+        "logs/bismark/Steve_filter/{sample}.log"
+    resources:
+        mem_mb = get_medium_mem_mb
+    shell:
+        "filter_non_conversion_H -p --threshold 3 --consecutive {input} | tee {log}"
+
+rule bmark_methylation_call:
+    input:
+        "bismark_out/{sample}_pe.deduplicated.nonCG_filtered.bam"
+    output:
+        temp("methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report.txt.gz"),
+        expand("methcall_out/{seqs}_context_{sample}_pe.deduplicated.nonCG_filtered.txt.gz", seqs = ["CpG","CHG","CHH"], allow_missing=True),
+        expand("methcall_out/{sample}_pe.deduplicated.nonCG_filtered.M-bias{suf}", suf=["_R1.png", "_R2.png", ".txt"], allow_missing=True),
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.bedGraph.gz",
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.bismark.cov.gz",
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.cytosine_context_summary.txt",
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered_splitting_report.txt"
+    params:
+        pe="--paired-end --comprehensive --bedGraph --counts --cytosine_report --CX --gzip -o methcall_out",
+        parallel="2",
+        gf= genome_folder
+    resources:
+        mem_mb = get_medium_mem_mb
+    threads: 6
+    log:
+        "logs/bismark/methcall/{sample}_pe.deduplicated.nonCG_filtered_deduplicated.log"
+    shell:
+        "bismark_methylation_extractor {params.pe} --parallel {params.parallel} --genome_folder {params.gf} {input} | tee {log}"
+
+rule unpack_CXfile:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report.txt.gz"
+    output:
+        temp("methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report.txt")
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "gunzip {input}"
+
+rule sort_CXfile:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report.txt"
+    output:
+        temp("methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt")
+    resources:
+        mem_mb = get_medium_mem_mb
+    shell:
+        "LC_ALL=C sort -k 1,1 -k 2,2n -k 3,3 -k 7,7 -o {output} {input}"
+
+rule make_wigs:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt"
+    output:
+        expand("wigs/{sample}_pe.deduplicated.nonCG_filtered_{context}.wig", context = ["CG","CHG","CHH"], allow_missing=True)
+    params:
+        outdir="wigs"
+    resources:
+        mem_mb = get_medium_mem_mb
+    shell:
+        "perl /path/to/Bismark_generate_wig.pl {input} {params.outdir}"
+
+rule make_methylkit_infiles:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt"
+    output:
+        CG="methylkit_in/{sample}.CG_report_sorted.txt",
+        CHG="methylkit_in/{sample}.CHG_report_sorted.txt",
+        CHH="methylkit_in/{sample}.CHH_report_sorted.txt"
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "grep 'CG\t' {input} > {output.CG} ; grep 'CHG\t' {input} > {output.CHG} ; grep 'CHH\t' {input} > {output.CHH}"
+
+rule bgzip:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt"
+    output:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt.gz"
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "bgzip {input}"
+
+rule tab_index:
+    input:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt.gz"
+    output:
+        "methcall_out/{sample}_pe.deduplicated.nonCG_filtered.CX_report_sorted.txt.gz.tbi"
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "tabix -p vcf {input}"
+
+rule bmark_report:
+    input:
+        ar="bismark_out/{sample}_PE_report.txt",
+        mr="methcall_out/{sample}_pe.deduplicated.nonCG_filtered.M-bias.txt",
+        sr="methcall_out/{sample}_pe.deduplicated.nonCG_filtered_splitting_report.txt",
+        dd="bismark_out/{sample}_pe.deduplication_report.txt",
+        nr="bismark_out/{sample}_pe.nucleotide_stats.txt"
+    output:
+        "reports/{sample}_PE_report.html"
+    resources:
+        mem_mb = get_low_mem_mb
+    shell:
+        "bismark2report --alignment_report {input.ar} --mbias_report {input.mr} --splitting_report {input.sr} --nucleotide_report {input.nr} --dedup_report {input.dd} --dir reports"
+
+rule analysis_report:
+    input:
+        expand("fastqc/{s}_trimmed_p_1_fastqc.zip", s=samples),
+        expand("fastqc/{s}_trimmed_p_2_fastqc.zip", s=samples),
+        expand("reports/{s}_PE_report.html", s=samples),
+        expand("reports/{s}_trimmomatic_summary.txt", s=samples),
+        expand("methcall_out/{s}_pe.deduplicated.nonCG_filtered.M-bias.txt", s=samples)
+    output:
+        "multiqc/multiqc_report.html"
+    resources:
+        mem_mb = get_low_mem_mb
+    params:
+        out_dir='multiqc'
+    log:
+        "multiqc/multiqc.log"
+    shell:
+        "multiqc --dirs fastqc/ bismark_out/ methcall_out/ logs/trimmomatic/ -o {params.out_dir}"

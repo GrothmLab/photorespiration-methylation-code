@@ -1,0 +1,44 @@
+--- filter_non_conversion
++++ filter_non_conversion_H
+@@ -137,11 +137,11 @@
+ 	    
+ 	    foreach my $char(@chars){
+ 
+-		if ( ($char eq 'H') or ($char eq 'X') ){ # methylated non-CG calls
++		if ( ($char eq 'H') ){ # methylated CHH calls
+ 		    ++$nonCpG_count;
+ 		    ++$total_nonCG;
+ 		}
+-		elsif ( ($char eq 'h') or ($char eq 'x') ){ # unmethylated non-CG calls
++		elsif ( ($char eq 'h') ){ # unmethylated CHH calls
+ 		    ++$total_nonCG;
+ 		}
+ 
+@@ -205,11 +205,11 @@
+ 	    my @chars = split //,$meth_call_1;
+ 	    
+ 	    foreach my $char(@chars){
+-		if ( ($char eq 'H') or ($char eq 'X') ){ # methylated non-CG calls
++		if ( ($char eq 'H') ){ # methylated CHH calls
+ 		    ++$nonCpG_count;
+ 		    ++$total_nonCG;
+ 		}
+-		elsif ( ($char eq 'h') or ($char eq 'x') ){ # unmethylated non-CG calls
++		elsif ( ($char eq 'h') ){ # unmethylated CHH calls
+ 		    ++$total_nonCG;
+ 		}
+ 		
+@@ -253,11 +253,11 @@
+ 		@chars = split //,$meth_call_2;
+ 		
+ 		foreach my $char(@chars){
+-		    if ( ($char eq 'H') or ($char eq 'X') ){ # methylated non-CG calls
++		    if ( ($char eq 'H') ){ # methylated CHH calls
+ 			++$nonCpG_count;
+ 			++$total_nonCG;
+ 		    }
+-		    elsif ( ($char eq 'h') or ($char eq 'x') ){ # unmethylated non-CG calls
++		    elsif ( ($char eq 'h') ){ # unmethylated CHH calls
+ 			++$total_nonCG;
+ 		    }  
+ 		    
