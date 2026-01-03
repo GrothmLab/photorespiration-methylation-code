@@ -13,23 +13,42 @@ Scripts assume the **working directory is the script's own folder** and use **re
 
 **Source data:** Large computational source data needed to run these scripts were archived on **Zenodo** (DOI: 10.5281/zenodo.18135710).
 The GitHub repository contains code only.
+The R scripts expect source-data/ inside each analysis folder under this repo:
+```
+R/WGBS_analysis_m_t_mt_wt/source-data/...
+R/WGBS_analysis_LD_SD/source-data/...
+R/WGBS_analysis_hCO2_cCO2/source-data/...
+```
+**Download** and extract the Zenodo archive (DOI: 10.5281/zenodo.18135710) and place the source data files into the expected `source-data/` folders, or create **symlinks** from each analysis folder to the corresponding data (link the `source-data` folder, not individual files).
 
-**Download** and extract the Zenodo archive (DOI: 10.5281/zenodo.18135710) and place the source data files into the expected `source-data/` folders, or create **symlinks** from each analysis folder to the corresponding data (link the `source-data` folder, not individual files). If you prefer command-line, you can fetch the Zenodo zips and extract them into the expected source-data/ folders:
-
-- Option A) Use the following **command line (Linux/macOS)** — replace the URLs with the actual Zenodo file links:
+- Option A) Use the following **command line (Linux/macOS)** to copy the three source-data/ folders into place:
 
 ```bash
 # from the repo root
-curl -L -o LD_SD.zip     "https://zenodo.org/records/18135710/files/LD_SD_source-data.zip?download=1" \
-  && unzip -q LD_SD.zip -d R/WGBS_analysis_LD_SD/source-data \
-  && curl -L -o hCO2_cCO2.zip "https://zenodo.org/records/18135710/files/hCO2_cCO2_source-data.zip?download=1" \
-  && unzip -q hCO2_cCO2.zip -d R/WGBS_analysis_hCO2_cCO2/source-data \
-  && curl -L -o m_t_mt_wt.zip "https://zenodo.org/records/18135710/files/m_t_mt_wt_source-data.zip?download=1" \
-  && unzip -q m_t_mt_wt.zip -d R/WGBS_analysis_m_t_mt_wt/source-data
-```
-- Option B) using the included **Helper script:** run `bash download_source_data.sh` from the repo root after filling the `RECID` and file names.
+curl -L -o source-data.tar.gz "https://zenodo.org/records/18135710/files/photorespiration_methylation_zenodo_source_data.tar.gz?download=1"
+tar -xzf source-data.tar.gz
 
-Source data can be reproduced from raw data, available on Gene Expression Omnibus (GEO) under the accession codes GSE292915 and GSE292917.
+mkdir -p R/WGBS_analysis_LD_SD/source-data R/WGBS_analysis_hCO2_cCO2/source-data R/WGBS_analysis_m_t_mt_wt/source-data
+
+rsync -a photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_LD_SD/source-data/      R/WGBS_analysis_LD_SD/source-data/
+rsync -a photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_hCO2_cCO2/source-data/  R/WGBS_analysis_hCO2_cCO2/source-data/
+rsync -a photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_m_t_mt_wt/source-data/  R/WGBS_analysis_m_t_mt_wt/source-data/
+```
+- Option B) Use the included helper script **download_source_data.sh** that **downloads, extracts, and creates symlinks**:
+
+```bash
+# from the repository root (macOS/Linux, Git Bash, or WSL)
+bash download_source_data.sh
+```
+
+What it does:
+- Downloads and extracts the tarball into `photorespiration_methylation_zenodo_source_data/`
+- Creates symlinks:
+  - `R/WGBS_analysis_LD_SD/source-data  →  photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_LD_SD/source-data`
+  - `R/WGBS_analysis_hCO2_cCO2/source-data  →  photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_hCO2_cCO2/source-data`
+  - `R/WGBS_analysis_m_t_mt_wt/source-data  →  photorespiration_methylation_zenodo_source_data/R/WGBS_analysis_m_t_mt_wt/source-data`
+
+**Windows notes:** Use **Git Bash** or **WSL**. Native PowerShell can run `bash download_source_data.sh`; creating symlinks may require Administrator privileges.
 
 ## How to run (RStudio)
 
