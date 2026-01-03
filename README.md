@@ -1,5 +1,8 @@
 # Code for “Photorespiration is linked to DNA methylation by formate as a one-carbon source” (in press)
 
+[![Code DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18137716.svg)](https://doi.org/10.5281/zenodo.18137716)
+[![Data DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18135710.svg)](https://doi.org/10.5281/zenodo.18135710)
+
 This repository contains:
 - `snakemake/` — BS-seq processing pipeline snapshot.
 - `R/` — R scripts for analysis and visualizations of WGBS data.  
